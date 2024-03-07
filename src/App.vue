@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SidebarMenu } from 'vue-sidebar-menu';
 import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
-import { menu } from '@/components/menu'
+import { sidebarContent } from '@/sidebar/sidebar'
 import { ref, nextTick } from 'vue'
 
 let collapseStatus = ref(false)
@@ -21,7 +21,7 @@ function afterLeave() {
 </script>
 
 <template>
-  <sidebar-menu :menu="menu" style="position: static;" @update:collapsed="onToggleCollapse">
+  <sidebar-menu :menu="sidebarContent" style="position: static;" @update:collapsed="onToggleCollapse">
     <template v-slot:header>
       <transition name="fade" @after-leave="afterLeave">
         <img v-if="!collapseStatus" class="logo" src="https://pp.myapp.com/ma_icon/0/icon_54190090_1707114404/256"

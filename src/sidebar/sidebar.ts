@@ -9,17 +9,13 @@ let separator = h('hr', {
     },
 })
 
-export const menu: Ref<Array<any>> = ref([
-    // {
-    //     header: 'Main Navigation',
-    //     hiddenOnCollapse: false,
-    // },
+export const sidebarContent: Ref<Array<any>> = ref([
     {
         component: separator,
     },
     {
-        href: '/',
         title: '戰情室',
+        href: '/dashboard',
         icon: {
             element: 'span',
             class: 'material-symbols-outlined',
@@ -35,18 +31,18 @@ export const menu: Ref<Array<any>> = ref([
         },
         child: [
             {
-                href: '/charts/sublink',
+                href: '/crm/generator',
                 title: '發電業者管理',
             },
             {
-                href: '/charts/sublink',
+                href: '/crm/demander',
                 title: '綠電用戶管理',
             },
         ],
     },
     {
-        href: '/my',
         title: '太陽能發電預測',
+        href: '/pv_forecast',
         icon: {
             element: 'span',
             class: 'material-symbols-outlined',
@@ -62,11 +58,11 @@ export const menu: Ref<Array<any>> = ref([
         },
         child: [
             {
-                href: '/charts/sublink',
+                href: '/match/taipower',
                 title: '台電轉供公式',
             },
             {
-                href: '/charts/sublink',
+                href: '/match/best_parameters',
                 title: '最佳參數求取',
             },
         ],
@@ -80,18 +76,22 @@ export const menu: Ref<Array<any>> = ref([
         },
         child: [
             {
-                href: '/charts/sublink',
+                href: '/bill/genarator',
                 title: '發電業者 - 計費通知單',
             },
             {
-                href: '/charts/sublink',
+                href: '/bill/demander',
                 title: '綠電用戶 - 繳費通知單',
+            },
+            {
+                href: '/bill/platform',
+                title: '內部金流管理系統',
             },
         ],
     },
     {
-        href: '/my',
         title: '檔案管理',
+        href: '/file_manage',
         icon: {
             element: 'span',
             class: 'material-symbols-outlined',
@@ -102,8 +102,8 @@ export const menu: Ref<Array<any>> = ref([
         component: separator,
     },
     {
-        href: '/my',
-        title: '用電管理',
+        title: '發電業者用管理頁面',
+        href: '/generator_manage',
         icon: {
             element: 'span',
             class: 'material-symbols-outlined',
@@ -114,8 +114,8 @@ export const menu: Ref<Array<any>> = ref([
         component: separator,
     },
     {
-        href: '/my',
-        title: '發電管理',
+        title: '綠電用戶用管理頁面',
+        href: '/demander_manage',
         icon: {
             element: 'span',
             class: 'material-symbols-outlined',
@@ -124,5 +124,35 @@ export const menu: Ref<Array<any>> = ref([
     },
     {
         component: separator,
+    },
+    {
+        title: '展示用頁面',
+        icon: {
+            element: 'span',
+            class: 'material-symbols-outlined',
+            text: 'person',
+        },
+        child: [
+            {
+                title: '發電管理系統',
+                href: '/expo/2023_generator_manage',
+            },
+            {
+                title: '用戶管理系統',
+                href: '/expo/2023_demander_manage',
+            },
+        ],
+    },
+    {
+        component: separator,
+    },
+    {
+        title: '設定',
+        href: '/setting',
+        icon: {
+            element: 'span',
+            class: 'material-symbols-outlined',
+            text: 'person',
+        },
     },
 ]);
