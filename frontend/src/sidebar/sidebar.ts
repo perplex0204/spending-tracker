@@ -24,7 +24,7 @@ export const sidebarContent: Ref<Array<any>> = ref([
     },
     {
         title: '電站管理',
-        href: '/pv_forecast',
+        href: '/station_management',
         icon: {
             element: 'span',
             class: 'material-symbols-outlined',
@@ -33,8 +33,9 @@ export const sidebarContent: Ref<Array<any>> = ref([
     },
     {
         title: '訂單管理',
+        href: '/order_management',
         icon: {
-            element: 'span',
+            element: 'order_management',
             class: 'material-symbols-outlined',
             text: 'person',
         },
