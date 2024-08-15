@@ -14,7 +14,7 @@ export const sidebarContent: Ref<Array<any>> = ref([
         component: separator,
     },
     {
-        title: '戰情總覽',
+        title: '資產總覽',
         href: '/dashboard',
         icon: {
             element: 'span',
@@ -23,8 +23,8 @@ export const sidebarContent: Ref<Array<any>> = ref([
         },
     },
     {
-        title: '電站管理',
-        href: '/station_management',
+        title: '圖表與統計',
+        href: '/charts',
         icon: {
             element: 'span',
             class: 'material-symbols-outlined',
@@ -32,8 +32,8 @@ export const sidebarContent: Ref<Array<any>> = ref([
         },
     },
     {
-        title: '訂單管理',
-        href: '/order_management',
+        title: '股票管理',
+        href: '/stocks',
         icon: {
             element: 'order_management',
             class: 'material-symbols-outlined',

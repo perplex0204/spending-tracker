@@ -25,3 +25,15 @@ dist-ssr
 
 # env
 *.env
+
+# 忽略所有 .pyc 檔案
+*.pyc
+
+# 忽略所有 __pycache__ 目錄
+__pycache__/
+
+# 忽略所有 .pyo 檔案（優化後的 Python 檔案）
+*.pyo
+
+# 忽略所有 .pyd 檔案（Python 動態庫檔案）
+*.pyd
