@@ -1,0 +1,9 @@
+Flask
+Flask-Cors
+Flask-Login
+Flask-PyMongo
+PyJWT
+pymongo
+python-dotenv
+numpy
+tzlocal

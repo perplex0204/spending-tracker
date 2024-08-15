@@ -1,27 +1,13 @@
+from fastapi import FastAPI
 import json
 import pymongo
 import datetime
-from flask import (
-    Flask,
-    request,
-    send_file,
-    abort,
-    jsonify,
-    render_template,
-    url_for,
-    redirect,
-)
-from flask_cors import CORS
-from flask_login import (
-    LoginManager,
-    UserMixin,
-    login_user,
-    logout_user,
-    login_required,
-    current_user,
-)
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_pymongo import PyMongo
+from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel
+from typing import Optional
 import logging
 import os
 import sys
@@ -33,16 +19,14 @@ from functools import wraps
 import traceback
 from dotenv import load_dotenv
 import argparse
+import uvicorn
 
-# flask configuration
-app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("web_backend_secret_key")
-app.config["UPLOAD_FOLDER"] = "./uploads"
-app.debug = True
+# FastAPI configuration
+app = FastAPI()
 
 # Logging起始設定
-log_file = "web_app_templates.log"
-logger = logging.getLogger("web_app_templates")
+log_file = "account.log"
+logger = logging.getLogger("account")
 logger.setLevel(logging.INFO)
 file_handler = logging.FileHandler(log_file, encoding="utf-8")
 file_handler.setLevel(logging.INFO)
@@ -56,7 +40,6 @@ stream_handler.setLevel(logging.INFO)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-
 # 環境變數設定
 load_dotenv("secret_key.env")
 MONGO_HOST = str(os.getenv("MONGODB_HOSTNAME"))
@@ -66,19 +49,16 @@ MONGO_PASS = str(os.getenv("MONGODB_PASSWORD"))
 
 # 連接MongoDB
 if MONGO_HOST == "localhost":
-    uri = "mongodb://{}:{}".format(MONGO_HOST, MONGO_PORT)
+    uri = f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 else:
-    uri = "mongodb://{}:{}@{}:{}/?authSource=admin".format(
-        MONGO_USER, MONGO_PASS, MONGO_HOST, MONGO_PORT
-    )
+    uri = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{
+        MONGO_HOST}:{MONGO_PORT}/?authSource=admin"
 logger.info("MongoDB connect uri: {}".format(uri))
-app.config["MONGO_URI"] = uri
-with app.app_context():
-    app.config["MONGO_DB"] = pymongo.MongoClient(app.config["MONGO_URI"])[
-        "salesplatformv2"
-    ]
+client = pymongo.MongoClient(uri)
+db = client["accounting"]
+
 try:
-    result = app.config["MONGO_DB"].command("ping")
+    result = db.command("ping")
     logger.info("MongoDB ping response: {}".format(result))
     logger.info("MongoDB connected")
 except Exception as e:
@@ -87,65 +67,37 @@ except Exception as e:
     sys.exit(1)
 
 
-# 啟用mongodb起始設置
-def init_mongodb():
-    # logger.info("Running MongoDB initialization")
-    # import mongodb_init
-
-    # # print(mongodb_init.file_upload_record)
-    # app.config["MONGO_DB"]["file_upload_record"].insert_one(
-    #     mongodb_init.file_upload_record
-    # )
-    # # print(mongodb_init.match_result)
-    # app.config["MONGO_DB"]["match_result"].insert_one(mongodb_init.match_result)
-    # # print(mongodb_init.taipower_hour_price)
-    # app.config["MONGO_DB"]["taipower_hour_price"].insert_one(
-    #     mongodb_init.taipower_hour_price
-    # )
-    # # print(mongodb_init.taipower_price_day)
-    # app.config["MONGO_DB"]["taipower_price_day"].insert_one(
-    #     mongodb_init.taipower_price_day
-    # )
-    # # print(mongodb_init.taipower_bill)
-    # app.config["MONGO_DB"]["taipower_bill"].insert_one(mongodb_init.taipower_bill)
-    # # print(mongodb_init.web_status)
-    # app.config["MONGO_DB"]["web_status"].insert_one(mongodb_init.web_status)
-    # # print(mongodb_init.users)
-    # for user in mongodb_init.users:
-    #     user["id"] = str(uuid.uuid5(uuid.NAMESPACE_DNS, user["user_name"]))
-    #     user["password"] = generate_password_hash(user["password"], method="sha256")
-    #     app.config["MONGO_DB"]["users"].insert_one(user)
-    return None
+app = FastAPI()
 
 
-# Import blueprints
-from test_blueprint import test_blueprint
-
-app.register_blueprint(test_blueprint, url_prefix="/v1/test_blueprint")
-
-
-# 測試用
-@app.route("/test", methods=["POST"])
-def test():
-    try:
-        print(request.json)
-        return jsonify({"message": "success"}), 200
-    except Exception as e:
-        return jsonify({"message": "failed"}), 401
+class Item(BaseModel):
+    name: str
+    price: float
+    is_offer: bool | None = None
 
 
-if __name__ == "__main__":
-    # 啟用mongodb起始設置
-    parser = argparse.ArgumentParser(description="Run the Flask app with options.")
-    parser.add_argument(
-        "--mongodb_init",
-        dest="mongodb_init",
-        action="store_true",
-        help="Initialize MongoDB with default values",
-    )
-    args = parser.parse_args()
-    if args.mongodb_init:
-        init_mongodb()
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
-    parser.set_defaults(mongodb_init=False)
-    app.run(host="0.0.0.0", port="5050")
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "q": q}
+
+
+@app.put("/items/{item_id}")
+def update_item(item_id: int, item: Item):
+    return {"item_name": item.name, "item_id": item_id}
+
+
+class SpendingItem(BaseModel):
+    date: str
+    amount: float
+    type: str
+    description: str | None = None
+
+
+@app.post("/add_spending")
+def add_spending(spending: SpendingItem):
+    return {"date": spending.date, "amount": spending.amount, "type": spending.type, "description": spending.description}
