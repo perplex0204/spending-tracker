@@ -100,4 +100,17 @@ class SpendingItem(BaseModel):
 
 @app.post("/add_spending")
 def add_spending(spending: SpendingItem):
+    print(spending)
+    upload_dict = {
+        "date": spending.date,
+        "amount": spending.amount,
+        "type": spending.type,
+        "description": spending.description,
+        'recorder': 'admin',
+        'group': [],
+        'repeat': {},
+        'split':{}
+    }
+    db['spending'].insert_one(upload_dict)
+    
     return {"date": spending.date, "amount": spending.amount, "type": spending.type, "description": spending.description}
