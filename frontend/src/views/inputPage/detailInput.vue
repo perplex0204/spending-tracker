@@ -21,19 +21,18 @@ const inputDescription = ref<string | null>(null);
 const amountRules = [(value: number) => !isNaN(value) || "金額必須是數字"];
 
 // panel
-const autoRepeat = ref(false);
 const autoRepeatInterval = ref<string | null>(null);
 const autoRepeatUntil = ref(false);
 const autoRepeatUntilDate = ref<Date | null>(null);
-const tempUserList = ['用戶1', '用戶2', '用戶3']
+const tempUserList = ["用戶1", "用戶2", "用戶3"];
 const cosumeBy = ref({
-	userType: '',
+	userType: "",
 	username: null,
-})
+});
 
 const addDisabled = computed(() => {
-	return !inputAmount.value || !inputType.value
-})
+	return !inputAmount.value || !inputType.value;
+});
 
 watch(
 	() => props.dialog,
@@ -56,29 +55,32 @@ watch(
 );
 
 function test() {
-	console.log(date.value);
-	console.log(inputAmount.value);
-	console.log(inputType.value);
-	console.log(inputDescription.value);
-	axios.post('/api/add_spending', {
-		date: date.value,
-		amount: inputAmount.value,
-		type: inputType.value,
-		description: inputDescription.value,
-	}).then((res) => {
-		console.log(res);
-	}).catch((err) => {
-		console.log(err);
-	})
+	axios
+		.post("/api/add_spending", {
+			date: date.value,
+			amount: inputAmount.value,
+			type: inputType.value,
+			description: inputDescription.value,
+			recorder: "admin",
+			group: [],
+			repeat: {},
+			split: {},
+		})
+		.then((res) => {
+			console.log(res);
+		})
+		.catch((err) => {
+			console.log(err);
+		});
 }
 
 function formatDateToChinese(date: Date): string {
 	const options: Intl.DateTimeFormatOptions = {
-		month: 'long',
-		day: 'numeric',
-		weekday: 'long',
+		month: "long",
+		day: "numeric",
+		weekday: "long",
 	};
-	return date.toLocaleDateString('zh-CN', options);
+	return date.toLocaleDateString("zh-CN", options);
 }
 </script>
 
@@ -87,11 +89,9 @@ function formatDateToChinese(date: Date): string {
 		<v-card class="d-flex flex-row">
 			<div class="w-50 m-2">
 				<div class="d-flex justify-content-center">
-					<v-btn class="flex-grow-1 mx-2"
-						@click="date = new Date(date.setDate(date.getDate() - 1))">往前一天</v-btn>
+					<v-btn class="flex-grow-1 mx-2" @click="date = new Date(date.setDate(date.getDate() - 1))">往前一天</v-btn>
 					<v-btn class="flex-grow-1 mx-2" @click="date = new Date()">今日</v-btn>
-					<v-btn class="flex-grow-1 mx-2"
-						@click="date = new Date(date.setDate(date.getDate() + 1))">往後一天</v-btn>
+					<v-btn class="flex-grow-1 mx-2" @click="date = new Date(date.setDate(date.getDate() + 1))">往後一天</v-btn>
 				</div>
 				<div class="d-flex justify-content-center">
 					<v-date-picker v-model="date" show-adjacent-months>
@@ -109,41 +109,33 @@ function formatDateToChinese(date: Date): string {
 			<div class="w-50 m-2 d-flex flex-column justify-content-between">
 				<div>
 					<div class="mx-4 my-2">
-						<v-select v-model="inputType" label="種類" :items="[
-							'California',
-							'Colorado',
-							'Florida',
-							'Georgia',
-							'Texas',
-							'Wyoming',
-						]" variant="underlined" hide-details></v-select>
+						<v-select
+							v-model="inputType"
+							label="種類"
+							:items="['California', 'Colorado', 'Florida', 'Georgia', 'Texas', 'Wyoming']"
+							variant="underlined"
+							hide-details
+						></v-select>
 					</div>
 					<div class="m-2">
-						<v-text-field v-model="inputDescription" class="m-2" label="敘述" variant="underlined"
-							hide-details></v-text-field>
+						<v-text-field v-model="inputDescription" class="m-2" label="敘述" variant="underlined" hide-details></v-text-field>
 					</div>
 					<div class="m-2">
-						<v-text-field v-model="inputAmount" class="m-2" :rules="amountRules" label="金額"
-							variant="underlined"></v-text-field>
+						<v-text-field v-model="inputAmount" class="m-2" :rules="amountRules" label="金額" variant="underlined"></v-text-field>
 					</div>
 					<v-expansion-panels>
 						<v-expansion-panel>
 							<v-expansion-panel-title>
 								<template v-slot:default="{ expanded }">
 									<v-row no-gutters>
-										<v-col class="d-flex justify-start" cols="4">
-											自動重複
-										</v-col>
+										<v-col class="d-flex justify-start" cols="4"> 自動重複 </v-col>
 										<v-col class="text-grey" cols="8">
 											<v-fade-transition leave-absolute>
-												<span v-if="expanded" key="0">
-													這是經常性開銷嗎？
-												</span>
+												<span v-if="expanded" key="0"> 這是經常性開銷嗎？ </span>
 												<span v-else key="1">
 													<div>
-														{{ autoRepeat ? '開啟' : '關閉' }}
-														<span v-if="autoRepeatInterval && autoRepeat">，{{
-															autoRepeatInterval }}</span>
+														{{ autoRepeatInterval !== "不重複" ? "開啟" : "關閉" }}
+														<span v-if="autoRepeatInterval !== '不重複'">，{{ autoRepeatInterval }}</span>
 													</div>
 												</span>
 											</v-fade-transition>
@@ -152,17 +144,16 @@ function formatDateToChinese(date: Date): string {
 								</template>
 							</v-expansion-panel-title>
 							<v-expansion-panel-text>
-								<v-switch v-model="autoRepeat" :label="autoRepeat ? '自動重複開啟' : '自動重複關閉'" hide-details
-									inset></v-switch>
-								<v-select :disabled="!autoRepeat" :items="['每週重複', '雙週重複', '每月重複', '每季重複', '每年重複']"
-									v-model="autoRepeatInterval" label="自動重複間隔" hide-details
-									variant="underlined"></v-select>
+								<v-select
+									:items="['不重複', '每週重複', '雙週重複', '每月重複', '每季重複', '每年重複']"
+									v-model="autoRepeatInterval"
+									label="自動重複間隔"
+									hide-details
+									variant="underlined"
+								></v-select>
 								<div class="d-flex align-items-center">
-									<v-switch v-model="autoRepeatUntil" :label="autoRepeatUntil ? '重複直到' : '不設定重複日期'"
-										hide-details inset>
-									</v-switch>
-									<el-date-picker v-model="autoRepeatUntilDate" class="ms-4" :teleported="false"
-										size="small" v-if="autoRepeatUntil"></el-date-picker>
+									<v-switch v-model="autoRepeatUntil" :label="autoRepeatUntil ? '重複直到' : '不設定結束日期'" hide-details inset> </v-switch>
+									<el-date-picker v-model="autoRepeatUntilDate" class="ms-4" :teleported="false" size="small" v-if="autoRepeatUntil"></el-date-picker>
 								</div>
 							</v-expansion-panel-text>
 						</v-expansion-panel>
@@ -170,16 +161,12 @@ function formatDateToChinese(date: Date): string {
 						<v-expansion-panel>
 							<v-expansion-panel-title v-slot="{ expanded }">
 								<v-row no-gutters>
-									<v-col class="d-flex justify-start" cols="4">
-										帳戶選擇
-									</v-col>
+									<v-col class="d-flex justify-start" cols="4"> 帳戶選擇 </v-col>
 									<v-col class="text-grey" cols="8">
 										<v-fade-transition leave-absolute>
-											<span v-if="expanded" key="0">
-												開銷的消費者是?
-											</span>
+											<span v-if="expanded" key="0"> 開銷的消費者是? </span>
 											<span v-else key="1">
-												{{ cosumeBy.userType ? cosumeBy.userType : '存入共同帳戶' }}
+												{{ cosumeBy.userType ? cosumeBy.userType : "存入共同帳戶" }}
 											</span>
 										</v-fade-transition>
 									</v-col>
@@ -188,26 +175,25 @@ function formatDateToChinese(date: Date): string {
 							<v-expansion-panel-text>
 								<div class="d-flex w-100 align-items-center">
 									<v-btn-toggle class="w-100" v-model="cosumeBy.userType">
-										<v-btn class="flex-grow-1" value="單一用戶">
-											單一
-										</v-btn>
-										<v-btn class="flex-grow-1" value="均分開銷">
-											均分
-										</v-btn>
-										<v-btn class="flex-grow-1" value="比例分配">
-											比例
-										</v-btn>
-										<v-btn class="flex-grow-1" value="金額分配">
-											金額
-										</v-btn>
+										<v-btn class="flex-grow-1" value="單一用戶"> 單一 </v-btn>
+										<v-btn class="flex-grow-1" value="均分開銷"> 均分 </v-btn>
+										<v-btn class="flex-grow-1" value="比例分配"> 比例 </v-btn>
+										<v-btn class="flex-grow-1" value="金額分配"> 金額 </v-btn>
 									</v-btn-toggle>
 								</div>
-								<v-select v-if="cosumeBy.userType === '單一用戶'" label="請選擇用戶" v-model="cosumeBy.username"
-									:items="tempUserList" variant="underlined" chips flat class="ms-4"></v-select>
+								<v-select
+									v-if="cosumeBy.userType === '單一用戶'"
+									label="請選擇用戶"
+									v-model="cosumeBy.username"
+									:items="tempUserList"
+									variant="underlined"
+									chips
+									flat
+									class="ms-4"
+								></v-select>
 								<div v-else-if="cosumeBy.userType === '比例分配' || cosumeBy.userType === '金額分配'">
 									<!-- v-for當前群組 -->
-									<v-text-field v-model="cosumeBy.username" label="請輸入比例" variant="underlined"
-										hide-details></v-text-field>
+									<v-text-field v-model="cosumeBy.username" label="請輸入比例" variant="underlined" hide-details></v-text-field>
 								</div>
 							</v-expansion-panel-text>
 						</v-expansion-panel>
