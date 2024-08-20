@@ -2,9 +2,14 @@
 import { SidebarMenu } from "vue-sidebar-menu";
 import "vue-sidebar-menu/dist/vue-sidebar-menu.css";
 import { sidebarContent } from "@/sidebar/sidebar";
-import { ref, provide } from "vue";
+import { ref, provide, onMounted, watch } from "vue";
+import { authStorePromise } from "@/store/authStore";
 import detailInput from "@/views/inputPage/detailInput.vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
+const authStore = ref();
+const isAuthenticated = ref(false);
 // sidebar collapse status
 let collapseStatus = ref(false);
 let blockStatus = ref(false);
@@ -26,32 +31,37 @@ function updateDialog(val: boolean) {
 }
 
 provide("sidebarStatus", collapseStatus);
+
+watch(
+	authStore,
+	(newVal, oldVal) => {
+		if (newVal.token === "") {
+			isAuthenticated.value = false;
+			router.push("/login");
+		} else {
+			isAuthenticated.value = true;
+		}
+	},
+	{ deep: true }
+);
+
+onMounted(async () => {
+	const useAuthStore = await authStorePromise;
+	authStore.value = useAuthStore();
+	console.log(authStore.value);
+});
 </script>
 
 <template>
-	<sidebar-menu
-		:menu="sidebarContent"
-		style="position: static"
-		@update:collapsed="onToggleCollapse"
-	/>
+	<sidebar-menu v-if="isAuthenticated" :menu="sidebarContent" style="position: static" @update:collapsed="onToggleCollapse" />
 	<div class="app-container w-100 d-flex flex-column">
-		<div
-			class="d-flex justify-content-between border rounded"
-			style="height: 6%"
-		>
+		<div class="d-flex justify-content-between border rounded" style="height: 6%" v-if="isAuthenticated">
 			<router-link to="/index">
-				<img
-					class="logo"
-					src="@/assets/logo/SPS_Logo.png"
-					style="height: 100%"
-				/>
+				<img class="logo" src="@/assets/logo/SPS_Logo.png" style="height: 100%" />
 			</router-link>
 			<div class="d-flex align-center">
 				<div style="width: 94.25px; height: 36px" class="mx-2">
-					<v-speed-dial
-						location="left center"
-						transition="slide-y-transition"
-					>
+					<v-speed-dial location="left center" transition="slide-y-transition">
 						<template v-slot:activator="{ props: activatorProps }">
 							<v-fab v-bind="activatorProps">快速記帳</v-fab>
 						</template>
@@ -79,10 +89,7 @@ provide("sidebarStatus", collapseStatus);
 			</div>
 		</div>
 		<router-view style="height: 94%"> </router-view>
-		<detailInput
-			:dialog="dialog"
-			@update:dialog="updateDialog"
-		></detailInput>
+		<detailInput :dialog="dialog" @update:dialog="updateDialog"></detailInput>
 	</div>
 </template>
 

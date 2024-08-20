@@ -24,3 +24,7 @@ class UserRegisterItem(BaseModel):
 class UserLoginItem(BaseModel):
     username: str
     password: str
+
+
+class TokenModel(BaseModel):
+    token: str

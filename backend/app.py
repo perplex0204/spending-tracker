@@ -47,7 +47,7 @@ MONGO_USER = str(os.getenv("MONGODB_USERNAME"))
 MONGO_PASS = str(os.getenv("MONGODB_PASSWORD"))
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60*24
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 jwt_instance = JWT()
 jwk = OctetJWK(SECRET_KEY.encode('utf-8'))
@@ -73,23 +73,37 @@ except Exception as e:
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire.timestamp()})  # 使用时间戳而不是 datetime 对象
+    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": int(expire.timestamp())})  # 使用整數時間戳
     encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
     return encoded_jwt
 
+def create_refresh_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now() + timedelta(days=7)  # refresh token 通常有更長的有效期
+    to_encode.update({"exp": int(expire.timestamp())})
+    encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
+    return encoded_jwt
 
 def decode_access_token(token: str):
     try:
         payload = jwt_instance.decode(token, jwk, algorithms=[ALGORITHM])
+        print(f"成功解碼的載荷：{payload}")
         return payload
-    except Exception:
+    except JWTDecodeError as e:
+        print(f"JWT 解碼錯誤：{str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证凭证",
+            detail=f"無效的認證憑證：{str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
+    except Exception as e:
+        print(f"未預期的錯誤：{str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"服務器錯誤：{str(e)}",
+        )
+    
 
 @app.post("/register")
 def register(user: model.UserRegisterItem):
@@ -109,7 +123,11 @@ def register(user: model.UserRegisterItem):
         "username": user.username,
         "password": hashed_password.hex(),
         "salt": salt.hex(),
-        "email": user.email
+        "email": user.email,
+        'user_data':{
+            'role': 'user',
+            'fast_input':[],
+        }
     }
     db.users.insert_one(user)
     return {"success": True, "message": "注册成功"}
@@ -117,23 +135,25 @@ def register(user: model.UserRegisterItem):
 
 @app.post("/login")
 def login(login_item: model.UserLoginItem):
-    # 查找用户
     user = db.users.find_one({"username": login_item.username})
     if not user:
         raise HTTPException(status_code=400, detail="用户名或密码错误")
-
-    # 使用存储的salt重新计算密码哈希
     salt = bytes.fromhex(user["salt"])
     hashed_password = hashlib.pbkdf2_hmac(
         'sha256', login_item.password.encode('utf-8'), salt, 100000)
-
-    # 验证密码
     if hashed_password.hex() != user["password"]:
         raise HTTPException(status_code=400, detail="用户名或密码错误")
-
     access_token = create_access_token(data={"sub": login_item.username})
-    return {"success": True, "message": "登录成功", "access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(data={"sub": login_item.username})
+    user = db.users.find_one({"username": login_item.username})
+    return {"success": True, "message": "登录成功", "token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "user_data": user["user_data"]}
 
+
+@app.post('/get_role_by_token')
+def get_role_by_token(token: model.TokenModel):
+    payload = decode_access_token(token.token)
+    user = db.users.find_one({"username": payload["sub"]})
+    return {"success": True, "message": "获取角色成功", "user_data": user["user_data"]}
 
 @app.post("/add_spending")
 def add_spending(spending: model.SpendingItem):
