@@ -52,4 +52,22 @@ export const sidebarContent: Ref<Array<any>> = ref([
             text: 'person',
         },
     },
+    {
+        title: '登入',
+        href: '/login',
+        icon: {
+            element: 'span',
+            class: 'material-symbols-outlined',
+            text: 'logout',
+        },
+    },
+    {
+        title: '註冊',
+        href: '/register',
+        icon: {
+            element: 'span',
+            class: 'material-symbols-outlined',
+            text: 'person_add',
+        },
+    },
 ]);

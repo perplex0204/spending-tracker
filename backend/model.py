@@ -13,3 +13,14 @@ class SpendingItem(BaseModel):
     amount: float
     type: str
     description: Optional[str] = None
+
+
+class UserRegisterItem(BaseModel):
+    username: str
+    password: str
+    email: str
+
+
+class UserLoginItem(BaseModel):
+    username: str
+    password: str
