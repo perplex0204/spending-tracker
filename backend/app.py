@@ -78,12 +78,14 @@ def create_access_token(data: dict):
     encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
     return encoded_jwt
 
+
 def create_refresh_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(days=7)  # refresh token 通常有更長的有效期
     to_encode.update({"exp": int(expire.timestamp())})
     encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
     return encoded_jwt
+
 
 def decode_access_token(token: str):
     try:
@@ -103,7 +105,7 @@ def decode_access_token(token: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"服務器錯誤：{str(e)}",
         )
-    
+
 
 @app.post("/register")
 def register(user: model.UserRegisterItem):
@@ -124,9 +126,84 @@ def register(user: model.UserRegisterItem):
         "password": hashed_password.hex(),
         "salt": salt.hex(),
         "email": user.email,
-        'user_data':{
-            'role': 'user',
-            'fast_input':[],
+        "email_verified": False,
+        'role': 'user',
+        'user_data': {
+            'fast_input': [],
+            'group': [],
+            'type': [
+                {
+                    'name': '外食',
+                    'icon': 'mdi-food',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '食品',
+                    'icon': 'mdi-food-apple',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '日用品',
+                    'icon': 'mdi-movie',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '交通',
+                    'icon': 'mdi-car',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '娛樂',
+                    'icon': 'mdi-movie',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '電信費',
+                    'icon': 'mdi-plus',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '治裝',
+                    'icon': 'mdi-bank',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '住宅',
+                    'icon': 'mdi-chart-line',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '進修',
+                    'icon': 'mdi-plus',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '醫療',
+                    'icon': 'mdi-plus',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '送禮',
+                    'icon': 'mdi-plus',
+                    'color': '#FF5733',
+                },
+                {
+                    'name': '其他',
+                    'icon': 'mdi-plus',
+                    'color': '#FF5733',
+                }
+                
+                ],
+        },
+        'user_data_session': {
+            'register_time': datetime.now(),
+            'last_login_time': datetime.now(),
+            'last_password_change_time': datetime.now(),
+        },
+        'session': {
+            'token': '',
+            'refresh_token': '',
+            'token_type': 'bearer',
         }
     }
     db.users.insert_one(user)
@@ -146,14 +223,32 @@ def login(login_item: model.UserLoginItem):
     access_token = create_access_token(data={"sub": login_item.username})
     refresh_token = create_refresh_token(data={"sub": login_item.username})
     user = db.users.find_one({"username": login_item.username})
-    return {"success": True, "message": "登录成功", "token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "user_data": user["user_data"]}
+    db.users.update_one({"username": login_item.username}, {
+                        "$set": {"session.token": access_token, "session.refresh_token": refresh_token}})
+    return_data = {
+        'user_name': user["username"],
+        'email': user["email"],
+        'user_data': user["user_data"],
+        'user_data_session': user["user_data_session"],
+    }
+    return {"success": True, "message": "登录成功", "token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "user_data": return_data}
 
 
 @app.post('/get_role_by_token')
 def get_role_by_token(token: model.TokenModel):
     payload = decode_access_token(token.token)
-    user = db.users.find_one({"username": payload["sub"]})
-    return {"success": True, "message": "获取角色成功", "user_data": user["user_data"]}
+    print("payload", payload)
+    if payload['exp'] < datetime.now().timestamp():
+        raise HTTPException(status_code=401, detail="Token expired")
+    user = db.users.find_one({'session.token': token.token})
+    return_data = {
+        'user_name': user["username"],
+        'email': user["email"],
+        'user_data': user["user_data"],
+        'user_data_session': user["user_data_session"],
+    }
+    return {"success": True, "message": "获取角色成功", "user_data": return_data}
+
 
 @app.post("/add_spending")
 def add_spending(spending: model.SpendingItem):

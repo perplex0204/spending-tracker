@@ -17,15 +17,15 @@ const login = async () => {
 		});
 		if (response.data.success) {
 			router.push("/index");
-			console.log(response.data);
+			console.log(response.data); // 安全風險: 不應在控制台記錄敏感信息
 			authStore.value.setToken(response.data.token);
 			authStore.value.setRefreshToken(response.data.refresh_token);
-			authStore.value.setUser(response.data.user_data);
+			authStore.value.setUserData(response.data.user_data);
 		} else {
 			alert("登录失败：" + response.data.message);
 		}
 	} catch (error) {
-		console.error("登录错误", error);
+		console.error("登录错误", error); // 考慮使用更安全的錯誤處理方式
 		alert("登录出错，请稍后重试");
 	}
 };
@@ -47,9 +47,30 @@ onMounted(async () => {
 					</v-toolbar>
 					<v-card-text>
 						<v-form @submit.prevent="login">
-							<v-text-field v-model="username" label="用户名" name="username" prepend-icon="mdi-account" type="text" required></v-text-field>
-							<v-text-field v-model="password" label="密码" name="password" prepend-icon="mdi-lock" type="password" required></v-text-field>
-							<v-btn color="primary" type="submit" block class="mt-4"> 登录 </v-btn>
+							<v-text-field
+								v-model="username"
+								label="用户名"
+								name="username"
+								prepend-icon="mdi-account"
+								type="text"
+								required
+							></v-text-field>
+							<v-text-field
+								v-model="password"
+								label="密码"
+								name="password"
+								prepend-icon="mdi-lock"
+								type="password"
+								required
+							></v-text-field>
+							<v-btn
+								color="primary"
+								type="submit"
+								block
+								class="mt-4"
+							>
+								登录
+							</v-btn>
 						</v-form>
 					</v-card-text>
 				</v-card>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, inject, watch } from "vue";
+import { ref, onMounted, nextTick, inject, watch, onUnmounted } from "vue";
 import * as echarts from "echarts";
 
 // 設定圓餅圖的選項
@@ -66,6 +66,7 @@ const pieChartOptions = ref({
 
 let pieChart;
 
+const sidebarStatus = inject("sidebarStatus");
 const initPieChart = () => {
 	// 獲取圓餅圖的DOM節點
 	const pieChartDom = document.getElementById("pie-chart");
@@ -76,15 +77,24 @@ const initPieChart = () => {
 		pieChart.setOption(pieChartOptions.value);
 	}
 };
+const handleResize = () => {
+	if (pieChart) {
+		pieChart.resize();
+	}
+};
 
 // 當組件掛載完成後，初始化圓餅圖
 onMounted(() => {
 	nextTick(() => {
 		initPieChart();
+		// 新增：添加 resize 事件監聽器
+		window.addEventListener("resize", handleResize);
 	});
 });
 
-const sidebarStatus = inject("sidebarStatus");
+onUnmounted(() => {
+	window.removeEventListener("resize", handleResize);
+});
 
 watch(
 	() => sidebarStatus.value,
