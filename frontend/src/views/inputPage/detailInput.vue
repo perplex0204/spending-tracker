@@ -14,7 +14,7 @@ const authStore = ref();
 const emit = defineEmits(["update:dialog"]);
 
 const localDialog = ref(false);
-const date = ref(new Date());
+const time = ref(new Date());
 const inputAmount = ref<number | null>(null);
 const inputType = ref<string | null>(null);
 const inputDescription = ref<string | null>(null);
@@ -43,7 +43,7 @@ watch(
 		inputAmount.value = null;
 		inputType.value = null;
 		inputDescription.value = null;
-		date.value = new Date();
+		time.value = new Date();
 	}
 );
 
@@ -59,7 +59,7 @@ watch(
 function test() {
 	axios
 		.post("/api/add_spending", {
-			date: date.value,
+			time: time.value,
 			amount: inputAmount.value,
 			type: inputType.value,
 			description: inputDescription.value,
@@ -76,13 +76,13 @@ function test() {
 		});
 }
 
-function formatDateToChinese(date: Date): string {
+function formatDateToChinese(time: Date): string {
 	const options: Intl.DateTimeFormatOptions = {
 		month: "long",
 		day: "numeric",
 		weekday: "long",
 	};
-	return date.toLocaleDateString("zh-CN", options);
+	return time.toLocaleDateString("zh-CN", options);
 }
 
 const typeList = ref([]);
@@ -104,7 +104,7 @@ onMounted(async () => {
 					<v-btn
 						class="flex-grow-1 mx-2"
 						@click="
-							date = new Date(date.setDate(date.getDate() - 1))
+							time = new Date(time.setDate(time.getDate() - 1))
 						"
 						>往前一天</v-btn
 					>
@@ -114,21 +114,21 @@ onMounted(async () => {
 					<v-btn
 						class="flex-grow-1 mx-2"
 						@click="
-							date = new Date(date.setDate(date.getDate() + 1))
+							time = new Date(time.setDate(time.getDate() + 1))
 						"
 						>往後一天</v-btn
 					>
 				</div>
 				<div class="d-flex justify-content-center">
-					<v-date-picker v-model="date" show-adjacent-months>
+					<v-date-picker v-model="time" show-adjacent-months>
 						<template v-slot:title></template>
 						<template v-slot:header>
 							<transition name="fade" mode="out-in">
 								<div
-									:key="date.toISOString()"
+									:key="time.toISOString()"
 									class="d-flex justify-content-center fs-1"
 								>
-									{{ formatDateToChinese(date) }}
+									{{ formatDateToChinese(time) }}
 								</div>
 							</transition>
 						</template>

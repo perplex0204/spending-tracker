@@ -1,26 +1,38 @@
 <script setup lang="ts">
-import { SidebarMenu } from "vue-sidebar-menu";
-import "vue-sidebar-menu/dist/vue-sidebar-menu.css";
-import { sidebarContent } from "@/sidebar/sidebar";
 import { ref, provide, onMounted, watch, computed } from "vue";
-import { authStorePromise } from "@/store/authStore";
-import detailInput from "@/views/inputPage/detailInput.vue";
 import { useRouter } from "vue-router";
+import { authStorePromise } from "@/store/authStore";
+import { SidebarMenu } from "vue-sidebar-menu";
+import { sidebarContent } from "@/sidebar/sidebar";
+import "vue-sidebar-menu/dist/vue-sidebar-menu.css";
+import addGroup from "@/views/index/addGroup.vue";
+import detailInput from "@/views/inputPage/detailInput.vue";
+import axios from "axios";
+
+interface GroupItem {
+	title: string;
+}
 
 const router = useRouter();
 const authStore = ref();
 const isAuthenticated = ref(false);
-const isLoading = ref(true);
 // sidebar collapse status
+const addGroupDialog = ref(false);
 let collapseStatus = ref(false);
 let blockStatus = ref(false);
 
+const currentGroup = ref("個人");
+const groupList = ref<GroupItem[]>([]);
+
 function onToggleCollapse(collapsed: boolean) {
 	collapseStatus.value = collapsed;
-	// console.log(collapseStatus.value);
 	if (collapseStatus.value === false) {
 		blockStatus.value = false;
 	}
+}
+
+function updateAddGroupDialog(val: boolean) {
+	addGroupDialog.value = val;
 }
 
 // detail input dialog
@@ -43,11 +55,31 @@ provide("sidebarStatus", collapseStatus);
 
 function consoleLogAuthStore() {
 	console.log(authStore.value.userData);
+	console.log(authStore.value.userID);
+}
+
+async function getGroup(user_id: string) {
+	groupList.value = [];
+	const res = await axios.post("/api/get_group", {
+		user_id: user_id,
+	});
+	console.log(res.data.data);
+	groupList.value.push({
+		title: "個人",
+	});
+	for (let group of res.data.data) {
+		groupList.value.push({
+			title: group.group_name,
+		});
+	}
+	groupList.value.push({
+		title: "新增群組",
+	});
 }
 
 watch(
 	authStore,
-	(newVal, oldVal) => {
+	(newVal, _) => {
 		if (newVal.token === "") {
 			isAuthenticated.value = false;
 			router.push("/login");
@@ -58,12 +90,21 @@ watch(
 	{ deep: true }
 );
 
+watch(currentGroup, (newVal, oldVal) => {
+	if (newVal === "新增群組") {
+		console.log("新增群組");
+		addGroupDialog.value = true;
+		currentGroup.value = oldVal;
+	}
+});
+
 onMounted(async () => {
 	try {
 		const useAuthStore = await authStorePromise;
 		authStore.value = useAuthStore();
 		await authStore.value.refreshUserInfo();
-		console.log(authStore.value);
+		console.log(authStore.value.userData);
+		await getGroup(authStore.value.userData.user_id);
 	} catch (error) {
 		console.error("初始化 authStore 失败:", error);
 	}
@@ -107,18 +148,18 @@ onMounted(async () => {
 						</template>
 
 						<v-btn key="1" icon="$success"></v-btn>
-						<v-btn key="2" icon="$info"></v-btn>
-						<v-btn key="3" icon="$warning"></v-btn>
-						<v-btn key="4" icon="$error"></v-btn>
-						<v-btn key="5" icon="$error"></v-btn>
-						<v-btn key="6" icon="$error"></v-btn>
-						<v-btn key="7" icon="$error"></v-btn>
-						<v-btn key="8" icon="$error"></v-btn>
-						<v-btn key="9" icon="$error"></v-btn>
-						<v-btn key="10" icon="$error"></v-btn>
 					</v-speed-dial>
 				</div>
 				<v-btn class="mx-2" @click="onToggleDialog">詳細記帳</v-btn>
+				<v-select
+					width="16rem"
+					class="mx-2 py-2"
+					v-model="currentGroup"
+					:items="groupList"
+					label="目前群組"
+					hide-details
+				>
+				</v-select>
 				<div class="mx-4">
 					<v-badge color="info" content="12">
 						<v-avatar color="brown" size="large" rounded="0">
@@ -133,6 +174,10 @@ onMounted(async () => {
 			:dialog="dialog"
 			@update:dialog="updateDialog"
 		></detailInput>
+		<addGroup
+			:dialog="addGroupDialog"
+			@update:dialog="updateAddGroupDialog"
+		></addGroup>
 	</div>
 </template>
 

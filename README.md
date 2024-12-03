@@ -25,3 +25,4 @@
 ## 版本紀錄
 
 2024 3/18: v1.0.2 更新後端部分
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload

@@ -10,7 +10,7 @@ import expensesPie from "@/views/index/expensesPie.vue";
 		<div class="col-8">
 			<calandar></calandar>
 		</div>
-		<div class="flex-grow-1">
+		<div class="col-4">
 			<itemTable></itemTable>
 			<expensesPie></expensesPie>
 		</div>

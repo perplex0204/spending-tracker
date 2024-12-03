@@ -9,7 +9,7 @@ class Item(BaseModel):
 
 
 class SpendingItem(BaseModel):
-    date: str
+    time: str
     amount: float
     type: str
     description: Optional[str] = None
@@ -28,3 +28,11 @@ class UserLoginItem(BaseModel):
 
 class TokenModel(BaseModel):
     token: str
+
+class AddGroupItem(BaseModel):
+    group_name: str
+    user_id: str
+
+class GetGroupItem(BaseModel):
+    user_id: str
+

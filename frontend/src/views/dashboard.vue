@@ -6,7 +6,6 @@ import { ref, watch } from "vue";
 	<div class="h-100 w-100">
 		<v-icon color="green-darken-2" icon="mdi-domain" size="large"></v-icon>
 	</div>
-	<div></div>
 </template>
 
 <style scoped>

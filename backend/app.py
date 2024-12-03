@@ -222,10 +222,10 @@ def login(login_item: model.UserLoginItem):
         raise HTTPException(status_code=400, detail="用户名或密码错误")
     access_token = create_access_token(data={"sub": login_item.username})
     refresh_token = create_refresh_token(data={"sub": login_item.username})
-    user = db.users.find_one({"username": login_item.username})
     db.users.update_one({"username": login_item.username}, {
                         "$set": {"session.token": access_token, "session.refresh_token": refresh_token}})
     return_data = {
+        'user_id': str(user["_id"]),
         'user_name': user["username"],
         'email': user["email"],
         'user_data': user["user_data"],
@@ -244,6 +244,7 @@ def get_role_by_token(token: model.TokenModel):
     return_data = {
         'user_name': user["username"],
         'email': user["email"],
+        'user_id': str(user["_id"]),
         'user_data': user["user_data"],
         'user_data_session': user["user_data_session"],
     }
@@ -253,4 +254,24 @@ def get_role_by_token(token: model.TokenModel):
 @app.post("/add_spending")
 def add_spending(spending: model.SpendingItem):
     print(spending)
-    return {"date": spending.date, "amount": spending.amount, "type": spending.type, "description": spending.description}
+    return {"time": spending.time, "amount": spending.amount, "type": spending.type, "description": spending.description}
+
+@app.post("/add_group")
+def add_group(add_group: model.AddGroupItem):
+    default_type = db['web_status'].find_one({"name":"default_type"})
+    default_fast_input = db['web_status'].find_one({"name":"default_fast_input"})
+    upload_data = {
+        "group_name": add_group.group_name,
+        "type": default_type["value"],
+        "fast_input": default_fast_input["value"],
+        "member": [add_group.user_id],
+    }
+    db['group'].insert_one(upload_data)
+    return {"success": True, "message": "新增群組成功"}
+
+@app.post("/get_group")
+def get_group(get_group: model.GetGroupItem):
+    group_list = list(db['group'].find({"member": {"$in": [get_group.user_id]}}))
+    for group in group_list:
+        group['_id'] = str(group['_id'])
+    return {"success": True, "message": "獲取群組成功", "data": group_list}
