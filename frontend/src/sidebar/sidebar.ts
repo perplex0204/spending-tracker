@@ -53,7 +53,7 @@ export const sidebarContent: Ref<Array<any>> = ref([
 		},
 	},
 	{
-		title: "登入",
+		title: "登出",
 		href: "/login",
 		icon: {
 			element: "span",

@@ -2,7 +2,7 @@
 	<v-dialog max-width="1000" v-model="localDialog">
 		<v-card class="d-flex flex-column p-2">
 			<v-text-field label="群組名稱" v-model="groupName"></v-text-field>
-			<v-btn @click="addGroup">新增</v-btn>
+			<v-btn @click="addGroup" :disabled="nameRule(groupName) !== true">新增</v-btn>
 		</v-card>
 	</v-dialog>
 </template>
@@ -31,8 +31,20 @@ async function addGroup() {
 		console.log(res);
 	} catch (error) {
 		console.error("Error adding group:", error);
+	} finally {
+		localDialog.value = false;
+		authStore.value.getGroupList(authStore.value.userData.user_id);
 	}
 }
+
+const nameRule = (value: string) => {
+	if (value.length === 0) {
+		return "群組名稱不能為空";
+	} else if (value === "新增群組" || value === "個人") {
+		return "群組名稱不能為新增群組";
+	}
+	return true;
+};
 
 watch(
 	() => props.dialog,
