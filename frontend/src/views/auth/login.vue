@@ -20,7 +20,6 @@ const login = async () => {
 			console.log(response.data); // 安全風險: 不應在控制台記錄敏感信息
 			authStore.value.setToken(response.data.token);
 			authStore.value.setRefreshToken(response.data.refresh_token);
-			authStore.value.setUserData(response.data.user_data);
 			await authStore.value.getGroupList(response.data.user_data.user_id);
 		} else {
 			alert("登入失敗：" + response.data.message);
@@ -49,38 +48,15 @@ onMounted(async () => {
 					</v-toolbar>
 					<v-card-text>
 						<v-form @submit.prevent="login">
-							<v-text-field
-								v-model="username"
-								label="用戶名"
-								name="username"
-								prepend-icon="mdi-account"
-								type="text"
-								required
-							></v-text-field>
-							<v-text-field
-								v-model="password"
-								label="密碼"
-								name="password"
-								prepend-icon="mdi-lock"
-								type="password"
-								required
-							></v-text-field>
-							<v-btn
-								color="primary"
-								type="submit"
-								block
-								class="mt-4"
-							>
+							<v-text-field v-model="username" label="用戶名" name="username" prepend-icon="mdi-account"
+								type="text" required></v-text-field>
+							<v-text-field v-model="password" label="密碼" name="password" prepend-icon="mdi-lock"
+								type="password" required></v-text-field>
+							<v-btn color="primary" type="submit" block class="mt-4">
 								登入
 							</v-btn>
 						</v-form>
-						<v-btn
-							color="primary"
-							type="submit"
-							block
-							class="mt-4"
-							@click="router.push('/register')"
-						>
+						<v-btn color="primary" type="submit" block class="mt-4" @click="router.push('/register')">
 							會員註冊
 						</v-btn>
 					</v-card-text>

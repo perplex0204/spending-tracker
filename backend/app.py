@@ -19,6 +19,7 @@ import uvicorn
 import hashlib
 import model
 from secrets import token_bytes
+from bson.objectid import ObjectId
 
 # FastAPI configuration
 app = FastAPI()
@@ -119,7 +120,7 @@ def register(user: model.UserRegisterItem):
     # 使用pbkdf2对密码进行加密，使用随机生成的salt
     hashed_password = hashlib.pbkdf2_hmac(
         'sha256', user.password.encode('utf-8'), salt, 100000)
-
+    
     # 创建新用户，存储salt和密码哈希
     user = {
         "username": user.username,
@@ -128,73 +129,7 @@ def register(user: model.UserRegisterItem):
         "email": user.email,
         "email_verified": False,
         'role': 'user',
-        'user_data': {
-            'fast_input': [],
-            'group': [],
-            'type': [
-                {
-                    'name': '外食',
-                    'icon': 'mdi-food',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '食品',
-                    'icon': 'mdi-food-apple',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '日用品',
-                    'icon': 'mdi-movie',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '交通',
-                    'icon': 'mdi-car',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '娛樂',
-                    'icon': 'mdi-movie',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '電信費',
-                    'icon': 'mdi-plus',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '治裝',
-                    'icon': 'mdi-bank',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '住宅',
-                    'icon': 'mdi-chart-line',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '進修',
-                    'icon': 'mdi-plus',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '醫療',
-                    'icon': 'mdi-plus',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '送禮',
-                    'icon': 'mdi-plus',
-                    'color': '#FF5733',
-                },
-                {
-                    'name': '其他',
-                    'icon': 'mdi-plus',
-                    'color': '#FF5733',
-                }
-                
-                ],
-        },
+        'group': [],
         'user_data_session': {
             'register_time': datetime.now(),
             'last_login_time': datetime.now(),
@@ -206,7 +141,7 @@ def register(user: model.UserRegisterItem):
             'token_type': 'bearer',
         }
     }
-    db.users.insert_one(user)
+    user_result = db.users.insert_one(user)
     return {"success": True, "message": "注册成功"}
 
 
@@ -275,3 +210,12 @@ def get_group(get_group: model.GetGroupItem):
     for group in group_list:
         group['_id'] = str(group['_id'])
     return {"success": True, "message": "獲取群組成功", "data": group_list}
+
+@app.post("/get_user_list_by_group")
+def get_user_list_by_group(get_user_list_by_group: model.GetUserListByGroupItem):
+    print(get_user_list_by_group)
+    group_data = db['group'].find_one({"_id": ObjectId(get_user_list_by_group.group_id)})
+    if group_data is not None:
+        return {"success": True, "message": "獲取群組成員成功", "data":group_data["member"]}
+    else:
+        return {"success": False, "message": "群組不存在"}

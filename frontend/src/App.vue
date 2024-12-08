@@ -68,7 +68,7 @@ watch(
 		}
 		if (newVal.token === "") {
 			isAuthenticated.value = false;
-			if (router.currentRoute.value.path !== "/re") {
+			if (router.currentRoute.value.path !== "/register") {
 				router.push("/login");
 			}
 		} else {
@@ -79,6 +79,7 @@ watch(
 );
 
 watch(currentGroup, (newVal, oldVal) => {
+	console.log(newVal);
 	if (newVal.title === "新增群組") {
 		addGroupDialog.value = true;
 		authStore.value.setCurrentGroup(oldVal);
@@ -92,7 +93,6 @@ onMounted(async () => {
 	try {
 		const useAuthStore = await authStorePromise;
 		authStore.value = useAuthStore();
-		await authStore.value.refreshUserInfo();
 		if (authStore.value.userData.user_id) {
 			await authStore.value.getGroupList(
 				authStore.value.userData.user_id

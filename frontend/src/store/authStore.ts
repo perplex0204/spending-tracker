@@ -15,6 +15,7 @@ let currentGroup: CurrentGroup = {
 	_id: "personal",
 };
 let groupList: CurrentGroup[] = [];
+let userListByGroup: string[] = [];
 
 // 异步函数获取用户信息
 async function fetchUser(token: string) {
@@ -30,6 +31,7 @@ async function fetchUser(token: string) {
 	}
 }
 
+// 取得群組列表
 async function getGroup(user_id: string) {
 	try {
 		groupList = [];
@@ -63,18 +65,15 @@ async function initializeStore() {
 	const useAuthStore = defineStore("user", {
 		state: () => ({
 			token: token,
-			userData: user,
 			refreshToken: refreshToken,
 			currentGroup: currentGroup,
 			groupList: groupList,
+			userListByGroup: userListByGroup,
 		}),
 		actions: {
 			setToken(newToken: string) {
 				this.token = newToken;
 				localStorage.setItem("token", newToken);
-			},
-			setUserData(newUserData: object) {
-				this.userData = newUserData;
 			},
 			setRefreshToken(newRefreshToken: string) {
 				this.refreshToken = newRefreshToken;
@@ -82,23 +81,20 @@ async function initializeStore() {
 			},
 			setCurrentGroup(newCurrentGroup: CurrentGroup) {
 				this.currentGroup = newCurrentGroup;
+				this.setUserListByGroup(newCurrentGroup._id);
+			},
+			async setUserListByGroup(group_id: string) {
+				const res = await axios.post("/api/get_user_list_by_group", {
+					group_id: group_id,
+				});
+				console.log(res);
+				this.userListByGroup = res.data.data;
 			},
 			logout() {
 				this.token = "";
-				this.userData = {};
 				this.refreshToken = "";
 				localStorage.removeItem("token");
 				localStorage.removeItem("refreshToken");
-			},
-			async refreshUserInfo() {
-				if (this.token) {
-					try {
-						const updatedUser = await fetchUser(this.token);
-						this.setUserData(updatedUser as object);
-					} catch (error) {
-						console.error("刷新用户信息失败:", error);
-					}
-				}
 			},
 			async getGroupList(user_id: string) {
 				this.groupList = await getGroup(user_id);
