@@ -14,7 +14,6 @@ import {
 	defineProps,
 	watch,
 	markRaw,
-	computed,
 	nextTick,
 } from "vue";
 import * as echarts from "echarts";
@@ -34,15 +33,19 @@ const props = defineProps<{
 }>();
 
 // 初始化圖表
-const initChart = (): ReturnType<typeof debounce> | null => {
+const initChart = () => {
 	if (chartRef.value) {
-		// 添加初始化配置
 		chart.value = markRaw(echarts.init(chartRef.value, props.theme));
-		const resizeHandler = debounce(() => {
-			chart.value?.resize();
-		}, 100);
-		window.addEventListener("resize", resizeHandler, { passive: true });
-		return resizeHandler;
+
+		// 使用 ResizeObserver 替代 resize 事件
+		const resizeObserver = new ResizeObserver(
+			debounce(() => {
+				chart.value?.resize();
+			}, 100)
+		);
+
+		resizeObserver.observe(chartRef.value);
+		return resizeObserver;
 	}
 	return null;
 };
@@ -51,31 +54,31 @@ const initChart = (): ReturnType<typeof debounce> | null => {
 const updateChart = async (option: EChartsOption) => {
 	if (chart.value) {
 		try {
-			loading.value = true;
 			error.value = null;
 			chart.value.setOption(option, true);
+			chart.value.showLoading();
 		} catch (err) {
 			error.value = "图表更新失败";
 			console.error(err);
 		} finally {
-			loading.value = false;
+			chart.value.hideLoading();
 		}
 	}
 };
 
-let resizeHandler: ReturnType<typeof debounce> | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
 onMounted(() => {
 	nextTick(() => {
-		resizeHandler = initChart();
+		resizeObserver = initChart();
 		if (props.option) {
 			updateChart(props.option);
 		}
 	});
 });
 onUnmounted(() => {
-	if (resizeHandler) {
-		window.removeEventListener("resize", resizeHandler);
+	if (resizeObserver) {
+		resizeObserver.disconnect();
 	}
 	if (chart.value) {
 		chart.value.dispose();

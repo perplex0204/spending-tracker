@@ -7,10 +7,10 @@ import { sidebarContent } from "@/sidebar/sidebar";
 import "vue-sidebar-menu/dist/vue-sidebar-menu.css";
 import addGroup from "@/views/index/addGroup.vue";
 import detailInput from "@/views/inputPage/detailInput.vue";
-import axios from "axios";
 
 interface GroupItem {
 	title: string;
+	_id: string;
 }
 
 const router = useRouter();
@@ -21,8 +21,10 @@ const addGroupDialog = ref(false);
 let collapseStatus = ref(false);
 let blockStatus = ref(false);
 
-const currentGroup = ref("個人");
-const groupList = ref<GroupItem[]>([]);
+const currentGroup = ref<GroupItem>({
+	title: "個人",
+	_id: "personal",
+});
 
 function onToggleCollapse(collapsed: boolean) {
 	collapseStatus.value = collapsed;
@@ -54,35 +56,21 @@ const getUserInitial = computed(() => {
 provide("sidebarStatus", collapseStatus);
 
 function consoleLogAuthStore() {
-	console.log(authStore.value.userData);
-	console.log(authStore.value.userID);
-}
-
-async function getGroup(user_id: string) {
-	groupList.value = [];
-	const res = await axios.post("/api/get_group", {
-		user_id: user_id,
-	});
-	console.log(res.data.data);
-	groupList.value.push({
-		title: "個人",
-	});
-	for (let group of res.data.data) {
-		groupList.value.push({
-			title: group.group_name,
-		});
-	}
-	groupList.value.push({
-		title: "新增群組",
-	});
+	console.log(authStore.value);
 }
 
 watch(
 	authStore,
 	(newVal, _) => {
+		console.log(newVal);
+		if (newVal.currentGroup === "") {
+			addGroupDialog.value = true;
+		}
 		if (newVal.token === "") {
 			isAuthenticated.value = false;
-			router.push("/login");
+			if (router.currentRoute.value.path !== "/register") {
+				router.push("/login");
+			}
 		} else {
 			isAuthenticated.value = true;
 		}
@@ -91,10 +79,13 @@ watch(
 );
 
 watch(currentGroup, (newVal, oldVal) => {
-	if (newVal === "新增群組") {
-		console.log("新增群組");
+	console.log(newVal);
+	if (newVal.title === "新增群組") {
 		addGroupDialog.value = true;
+		authStore.value.setCurrentGroup(oldVal);
 		currentGroup.value = oldVal;
+	} else {
+		authStore.value.setCurrentGroup(newVal);
 	}
 });
 
@@ -102,9 +93,11 @@ onMounted(async () => {
 	try {
 		const useAuthStore = await authStorePromise;
 		authStore.value = useAuthStore();
-		await authStore.value.refreshUserInfo();
-		console.log(authStore.value.userData);
-		await getGroup(authStore.value.userData.user_id);
+		if (authStore.value.userData.user_id) {
+			await authStore.value.getGroupList(
+				authStore.value.userData.user_id
+			);
+		}
 	} catch (error) {
 		console.error("初始化 authStore 失败:", error);
 	}
@@ -112,37 +105,23 @@ onMounted(async () => {
 </script>
 
 <template>
-	<sidebar-menu
-		v-if="isAuthenticated"
-		:menu="sidebarContent"
-		style="position: static"
-		@update:collapsed="onToggleCollapse"
-	>
+	<sidebar-menu v-if="isAuthenticated && router.currentRoute.value.path !== '/login'" :menu="sidebarContent"
+		style="position: static" @update:collapsed="onToggleCollapse">
 		<template v-slot:footer>
-			<v-card class="m-2 p-2 text-center" @click="consoleLogAuthStore"
-				>AUTHSTORE</v-card
-			>
+			{{ router.currentRoute.value.path }}
+			<v-card class="m-2 p-2 text-center" @click="consoleLogAuthStore">AUTHSTORE</v-card>
 		</template>
 	</sidebar-menu>
 	<div class="app-container w-100 d-flex flex-column">
-		<div
-			class="d-flex justify-content-between border rounded"
-			style="height: 6%"
-			v-if="isAuthenticated"
-		>
+		<div class="d-flex justify-content-between border rounded" style="height: 6%" v-if="
+			isAuthenticated && router.currentRoute.value.path !== '/login'
+		">
 			<router-link to="/index">
-				<img
-					class="logo"
-					src="@/assets/logo/SPS_Logo.png"
-					style="height: 100%"
-				/>
+				<img class="logo" src="@/assets/logo/SPS_Logo.png" style="height: 100%" />
 			</router-link>
 			<div class="d-flex align-center">
 				<div style="width: 94.25px; height: 36px" class="mx-2">
-					<v-speed-dial
-						location="left center"
-						transition="slide-y-transition"
-					>
+					<v-speed-dial location="left center" transition="slide-y-transition">
 						<template v-slot:activator="{ props: activatorProps }">
 							<v-fab v-bind="activatorProps">快速記帳</v-fab>
 						</template>
@@ -151,14 +130,8 @@ onMounted(async () => {
 					</v-speed-dial>
 				</div>
 				<v-btn class="mx-2" @click="onToggleDialog">詳細記帳</v-btn>
-				<v-select
-					width="16rem"
-					class="mx-2 py-2"
-					v-model="currentGroup"
-					:items="groupList"
-					label="目前群組"
-					hide-details
-				>
+				<v-select width="16rem" class="mx-2 py-2" v-model="currentGroup" :items="authStore.groupList"
+					:item-title="(item: GroupItem) => item.title" return-object label="目前群組" hide-details>
 				</v-select>
 				<div class="mx-4">
 					<v-badge color="info" content="12">
@@ -170,14 +143,8 @@ onMounted(async () => {
 			</div>
 		</div>
 		<router-view style="height: 94%"> </router-view>
-		<detailInput
-			:dialog="dialog"
-			@update:dialog="updateDialog"
-		></detailInput>
-		<addGroup
-			:dialog="addGroupDialog"
-			@update:dialog="updateAddGroupDialog"
-		></addGroup>
+		<detailInput :dialog="dialog" @update:dialog="updateDialog"></detailInput>
+		<addGroup :dialog="addGroupDialog" @update:dialog="updateAddGroupDialog"></addGroup>
 	</div>
 </template>
 

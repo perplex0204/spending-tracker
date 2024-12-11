@@ -20,19 +20,20 @@ const login = async () => {
 			console.log(response.data); // 安全風險: 不應在控制台記錄敏感信息
 			authStore.value.setToken(response.data.token);
 			authStore.value.setRefreshToken(response.data.refresh_token);
-			authStore.value.setUserData(response.data.user_data);
+			await authStore.value.getGroupList(response.data.user_data.user_id);
 		} else {
-			alert("登录失败：" + response.data.message);
+			alert("登入失敗：" + response.data.message);
 		}
 	} catch (error) {
-		console.error("登录错误", error); // 考慮使用更安全的錯誤處理方式
-		alert("登录出错，请稍后重试");
+		console.error("登入錯誤", error); // 考慮使用更安全的錯誤處理方式
+		alert("登入失敗，請稍後重試");
 	}
 };
 
 onMounted(async () => {
 	const useAuthStore = await authStorePromise;
 	authStore.value = useAuthStore();
+	authStore.value.logout();
 	console.log(authStore.value);
 });
 </script>
@@ -43,35 +44,21 @@ onMounted(async () => {
 			<v-col cols="12" sm="8" md="6" lg="4">
 				<v-card class="elevation-12">
 					<v-toolbar color="primary" dark flat>
-						<v-toolbar-title>登录</v-toolbar-title>
+						<v-toolbar-title>登入</v-toolbar-title>
 					</v-toolbar>
 					<v-card-text>
 						<v-form @submit.prevent="login">
-							<v-text-field
-								v-model="username"
-								label="用户名"
-								name="username"
-								prepend-icon="mdi-account"
-								type="text"
-								required
-							></v-text-field>
-							<v-text-field
-								v-model="password"
-								label="密码"
-								name="password"
-								prepend-icon="mdi-lock"
-								type="password"
-								required
-							></v-text-field>
-							<v-btn
-								color="primary"
-								type="submit"
-								block
-								class="mt-4"
-							>
-								登录
+							<v-text-field v-model="username" label="用戶名" name="username" prepend-icon="mdi-account"
+								type="text" required></v-text-field>
+							<v-text-field v-model="password" label="密碼" name="password" prepend-icon="mdi-lock"
+								type="password" required></v-text-field>
+							<v-btn color="primary" type="submit" block class="mt-4">
+								登入
 							</v-btn>
 						</v-form>
+						<v-btn color="primary" type="submit" block class="mt-4" @click="router.push('/register')">
+							會員註冊
+						</v-btn>
 					</v-card-text>
 				</v-card>
 			</v-col>

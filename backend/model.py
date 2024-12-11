@@ -36,3 +36,6 @@ class AddGroupItem(BaseModel):
 class GetGroupItem(BaseModel):
     user_id: str
 
+class GetUserListByGroupItem(BaseModel):
+    group_id: str
+
