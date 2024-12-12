@@ -71,7 +71,6 @@ except Exception as e:
     logger.error("MongoDB connect failed")
     sys.exit(1)
 
-
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -79,14 +78,12 @@ def create_access_token(data: dict):
     encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
     return encoded_jwt
 
-
 def create_refresh_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(days=7)  # refresh token 通常有更長的有效期
     to_encode.update({"exp": int(expire.timestamp())})
     encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
     return encoded_jwt
-
 
 def decode_access_token(token: str):
     try:
@@ -106,7 +103,6 @@ def decode_access_token(token: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"服務器錯誤：{str(e)}",
         )
-
 
 @app.post("/register")
 def register(user: model.UserRegisterItem):
@@ -144,7 +140,6 @@ def register(user: model.UserRegisterItem):
     user_result = db.users.insert_one(user)
     return {"success": True, "message": "注册成功"}
 
-
 @app.post("/login")
 def login(login_item: model.UserLoginItem):
     user = db.users.find_one({"username": login_item.username})
@@ -168,7 +163,6 @@ def login(login_item: model.UserLoginItem):
     }
     return {"success": True, "message": "登录成功", "token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "user_data": return_data}
 
-
 @app.post('/get_role_by_token')
 def get_role_by_token(token: model.TokenModel):
     payload = decode_access_token(token.token)
@@ -184,7 +178,6 @@ def get_role_by_token(token: model.TokenModel):
         'user_data_session': user["user_data_session"],
     }
     return {"success": True, "message": "获取角色成功", "user_data": return_data}
-
 
 @app.post("/add_spending")
 def add_spending(spending: model.SpendingItem):
