@@ -1,6 +1,6 @@
 export default defineNuxtRouteMiddleware((to, from) => {
     // 確保只在客戶端執行
-    if (process.client) {
+    if (process) {
         const { checkAuth } = useAuth();
 
         if (!checkAuth()) {

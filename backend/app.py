@@ -104,6 +104,10 @@ def decode_access_token(token: str):
             detail=f"服務器錯誤：{str(e)}",
         )
 
+@app.post("/test")
+def test(request: model.TestItem):
+    return {"message": "Hello from API: " + request.name}
+
 @app.post("/register")
 def register(user: model.UserRegisterItem):
     # 检查用户是否已存在

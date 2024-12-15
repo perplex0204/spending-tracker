@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 
+class TestItem(BaseModel):
+    name: str
 
 class Item(BaseModel):
     name: str

@@ -21,12 +21,6 @@ useSeoMeta({
     ogImage: 'https://example.com/image.png',
     twitterCard: 'summary_large_image',
 });
-
-const websiteConfig = useState<number>('config');
-
-await callOnce(async () => {
-    websiteConfig.value = 123;
-});
 </script>
 
 <style>

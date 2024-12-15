@@ -1,7 +1,6 @@
 <template>
     <div>
         <h1>Dashboard</h1>
-        {{ websiteConfig }}
         <v-btn @click="test"></v-btn>
         <v-btn @click="logout">登出</v-btn>
     </div>
@@ -14,10 +13,4 @@ const { isAuthenticated, logout } = useAuth();
 definePageMeta({
     middleware: ['auth'],
 });
-
-const websiteConfig = useState<number>('config');
-
-const test = () => {
-    websiteConfig.value += 1;
-};
 </script>
