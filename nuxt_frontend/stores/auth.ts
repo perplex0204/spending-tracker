@@ -1,25 +1,25 @@
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        token: '',
+        isLoggedIn: false,
         user: null,
-        groupList: [],
     }),
-
     actions: {
-        setToken(token: string) {
-            this.token = token;
+        async checkAuth() {
+            const token = useCookie('token');
+            if (token.value) {
+                try {
+                    // 可以在這裡驗證 token
+                    // const response = await $fetch('/api/verify-token');
+                    this.isLoggedIn = true;
+                    // this.user = response.user;
+                } catch {
+                    this.isLoggedIn = false;
+                    this.user = null;
+                }
+            } else {
+                this.isLoggedIn = false;
+                this.user = null;
+            }
         },
-
-        async login(credentials: any) {
-            // 登入邏輯
-        },
-
-        async getGroupList() {
-            // 獲取群組列表邏輯
-        },
-    },
-
-    getters: {
-        isAuthenticated: (state) => !!state.token,
     },
 });

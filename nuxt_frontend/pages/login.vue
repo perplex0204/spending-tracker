@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useAuth } from '~/composables/auth';
+import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+
 const { login } = useAuth();
 const router = useRouter();
 
@@ -14,7 +18,6 @@ const handleSubmit = async () => {
     try {
         isLoading.value = true;
         error.value = '';
-
         await login(formData.value);
         router.push('/dashboard');
     } catch (e) {
@@ -28,10 +31,7 @@ const handleSubmit = async () => {
 <template>
     <div class="min-h-screen flex items-center justify-center bg-gray-50">
         <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-            <div>
-                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">登入您的帳號</h2>
-            </div>
-            <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
+            <form class="my-6 space-y-6" @submit.prevent="handleSubmit">
                 <div class="rounded-md shadow-sm space-y-4">
                     <div>
                         <label for="username" class="sr-only">帳號</label>

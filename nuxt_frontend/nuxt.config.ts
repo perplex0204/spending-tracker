@@ -22,7 +22,7 @@ export default defineNuxtConfig({
     runtimeConfig: {
         apiSecret: 'ttting999',
         public: {
-            apiBase: '/api',
+            apiBase: 'http://127.0.0.1:8000/',
         },
     },
     app: {

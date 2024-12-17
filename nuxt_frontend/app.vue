@@ -21,6 +21,15 @@ useSeoMeta({
     ogImage: 'https://example.com/image.png',
     twitterCard: 'summary_large_image',
 });
+
+const authStore = useAuthStore();
+
+onMounted(async () => {
+    await authStore.checkAuth();
+    if (!authStore.isLoggedIn) {
+        navigateTo('/login');
+    }
+});
 </script>
 
 <style>

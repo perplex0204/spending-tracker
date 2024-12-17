@@ -1,10 +1,8 @@
-export default defineNuxtRouteMiddleware((to, from) => {
-    // 確保只在客戶端執行
-    if (process) {
-        const { checkAuth } = useAuth();
+export default defineNuxtRouteMiddleware(async (to) => {
+    const authStore = useAuthStore();
+    await authStore.checkAuth(); // 確保先檢查登入狀態
 
-        if (!checkAuth()) {
-            return navigateTo('/login');
-        }
+    if (!authStore.isLoggedIn && to.path !== '/login') {
+        return navigateTo('/login');
     }
 });

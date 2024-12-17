@@ -183,12 +183,8 @@ def login(login_item: model.UserLoginItem):
         "user_data": return_data,
     }
 
-<<<<<<< HEAD
 
 @app.post("/get_role_by_token")
-=======
-@app.post('/get_role_by_token')
->>>>>>> df73c6b5c9b4a8d65902cb6856c6034d027d5659
 def get_role_by_token(token: model.TokenModel):
     payload = decode_access_token(token.token)
     print("payload", payload)

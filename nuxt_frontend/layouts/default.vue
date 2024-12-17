@@ -36,8 +36,8 @@
                 <p>© 2024 Your Website</p>
             </footer> -->
         </div>
-        <addGroup :dialog="addGroupDialog" @update:dialog="updateAddGroupDialog"></addGroup>
-        <detailInput :dialog="detailDialog" @update:dialog="updateDialog"></detailInput>
+        <!-- <addGroup :dialog="addGroupDialog" @update:dialog="updateAddGroupDialog"></addGroup>
+        <detailInput :dialog="detailDialog" @update:dialog="updateDialog"></detailInput> -->
     </div>
 </template>
 
