@@ -31,3 +31,22 @@ export const useAuth = () => {
         isAuthenticated: computed(() => authStore.isLoggedIn),
     };
 };
+
+export const useRegister = () => {
+    const authStore = useAuthStore();
+
+    const register = async (credentials: { username: string; password: string; email: string }) => {
+        try {
+            const response = await $fetch<LoginResponse>('/api/register', {
+                method: 'POST',
+                body: credentials,
+            });
+        } catch (error) {
+            throw new Error('註冊失敗');
+        }
+    };
+
+    return {
+        register,
+    };
+};

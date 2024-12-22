@@ -36,7 +36,7 @@ export default defineNuxtConfig({
             /* vuetify options */
         },
     },
-    modules: ['@nuxtjs/tailwindcss', 'nuxt-mdi', 'vuetify-nuxt-module', '@pinia/nuxt'],
+    modules: ['@nuxtjs/tailwindcss', 'nuxt-mdi', 'vuetify-nuxt-module', '@pinia/nuxt', 'nuxt-echarts', 'nuxt-lodash'],
     imports: {
         dirs: ['stores'],
     },

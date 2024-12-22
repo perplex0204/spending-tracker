@@ -1,6 +1,6 @@
 <template>
-    <div class="flex w-full min-h-screen mx-auto">
-        <SidebarMenu :menu="menu" style="position: static" />
+    <div class="flex w-full h-screen mx-auto">
+        <SidebarMenu :menu="menu" style="position: static" :collapsed="sidebarStatus" @update:collapsed="onToggleCollapse" />
         <div class="flex-1 flex flex-col">
             <header class="bg-gray-100 flex justify-between">
                 <router-link to="/">
@@ -28,7 +28,7 @@
                 </div>
             </header>
 
-            <main class="container mx-auto flex-1">
+            <main class="flex-1 overflow-y-auto">
                 <slot></slot>
             </main>
 
@@ -49,6 +49,9 @@ interface GroupItem {
     title: string;
 }
 
+const sidebarStatus = ref(false);
+provide('sidebarStatus', sidebarStatus);
+
 const detailDialog = ref(false);
 const onToggleDialog = () => {
     console.log('onToggleDialog');
@@ -63,6 +66,15 @@ const authStore = {
     groupList: [{ title: 'Group 1' }, { title: 'Group 2' }, { title: 'Group 3' }],
 };
 
+const menu = [
+    {
+        header: 'Main Navigation',
+        icon: 'mdi-home',
+        title: 'Home',
+        to: '/',
+    },
+];
+
 const test = async () => {
     console.log('test');
     const res = await $fetch('/api/test', {
@@ -74,12 +86,10 @@ const test = async () => {
     console.log(res);
 };
 
-const menu = [
-    {
-        header: 'Main Navigation',
-        icon: 'mdi-home',
-        title: 'Home',
-        to: '/',
-    },
-];
+function onToggleCollapse(collapsed: boolean) {
+    sidebarStatus.value = collapsed;
+    // if (sidebarStatus.value === false) {
+    // 	blockStatus.value = false;
+    // }
+}
 </script>

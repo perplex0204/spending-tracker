@@ -114,6 +114,10 @@ def register(user: model.UserRegisterItem):
     if db.users.find_one({"username": user.username}):
         raise HTTPException(status_code=400, detail="用户名已存在")
 
+    # 检查邮箱是否已存在
+    if db.users.find_one({"email": user.email}):
+        raise HTTPException(status_code=400, detail="邮箱已存在")
+
     # 生成随机salt
     salt = token_bytes(16)
 
