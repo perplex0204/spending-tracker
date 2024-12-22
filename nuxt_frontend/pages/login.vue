@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuth } from '~/composables/auth';
+import { useAuth } from '~/composables/useAuth';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 

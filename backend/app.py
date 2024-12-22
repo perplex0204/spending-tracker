@@ -171,12 +171,11 @@ def login(login_item: model.UserLoginItem):
         "user_id": str(user["_id"]),
         "user_name": user["username"],
         "email": user["email"],
-        "user_data": user["user_data"],
         "user_data_session": user["user_data_session"],
     }
     return {
         "success": True,
-        "message": "登录成功",
+        "message": "登入成功",
         "token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
@@ -195,10 +194,9 @@ def get_role_by_token(token: model.TokenModel):
         "user_name": user["username"],
         "email": user["email"],
         "user_id": str(user["_id"]),
-        "user_data": user["user_data"],
         "user_data_session": user["user_data_session"],
     }
-    return {"success": True, "message": "获取角色成功", "user_data": return_data}
+    return {"success": True, "message": "獲取角色成功", "user_data": return_data}
 
 @app.post("/add_spending")
 def add_spending(spending: model.SpendingItem):
