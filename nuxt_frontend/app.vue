@@ -5,6 +5,8 @@
 </template>
 
 <script setup lang="ts">
+import { checkAuth } from '~/composables/useAuth';
+
 useHead({
     title: 'Accounting',
     meta: [{ name: 'description', content: 'Accounting' }, { name: 'viewport', content: 'width=device-width, initial-scale=1' }, { charset: 'utf-8' }],
@@ -23,12 +25,14 @@ useSeoMeta({
 });
 
 const authStore = useAuthStore();
+const webStatusStore = useWebStatusStore();
 
 onMounted(async () => {
-    await authStore.checkAuth();
+    await checkAuth();
     if (!authStore.isLoggedIn) {
         navigateTo('/login');
     }
+    await webStatusStore.getGroupList();
 });
 </script>
 

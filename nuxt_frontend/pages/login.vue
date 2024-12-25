@@ -1,38 +1,3 @@
-<script setup lang="ts">
-import { useAuth } from '~/composables/useAuth';
-import { useRouter } from 'vue-router';
-import { ref } from 'vue';
-
-const { login } = useAuth();
-const router = useRouter();
-
-const formData = ref({
-    username: '',
-    password: '',
-    email: '',
-});
-
-const isLoading = ref(false);
-const error = ref('');
-
-const handleSubmit = async () => {
-    try {
-        isLoading.value = true;
-        error.value = '';
-        await login(formData.value);
-        router.push('/dashboard');
-    } catch (e) {
-        error.value = '登入失敗，請檢查帳號密碼';
-    } finally {
-        isLoading.value = false;
-    }
-};
-
-const toRegister = () => {
-    router.push('/register');
-};
-</script>
-
 <template>
     <div class="min-h-screen flex items-center justify-center bg-gray-50">
         <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
@@ -74,3 +39,38 @@ const toRegister = () => {
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import { useAuth } from '~/composables/useAuth';
+import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+
+const { login } = useAuth();
+const router = useRouter();
+
+const formData = ref({
+    username: '',
+    password: '',
+    email: '',
+});
+
+const isLoading = ref(false);
+const error = ref('');
+
+const handleSubmit = async () => {
+    try {
+        isLoading.value = true;
+        error.value = '';
+        await login(formData.value);
+        router.push('/dashboard');
+    } catch (e) {
+        error.value = '登入失敗，請檢查帳號密碼';
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+const toRegister = () => {
+    router.push('/register');
+};
+</script>

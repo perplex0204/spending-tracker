@@ -104,10 +104,6 @@ def decode_access_token(token: str):
             detail=f"服務器錯誤：{str(e)}",
         )
 
-@app.post("/test")
-def test(request: model.TestItem):
-    return {"message": "Hello from API: " + request.name}
-
 @app.post("/register")
 def register(user: model.UserRegisterItem):
     # 检查用户是否已存在
@@ -204,7 +200,6 @@ def get_role_by_token(token: model.TokenModel):
 
 @app.post("/add_spending")
 def add_spending(spending: model.SpendingItem):
-    print(spending)
     return {
         "time": spending.time,
         "amount": spending.amount,
@@ -229,6 +224,7 @@ def add_group(add_group: model.AddGroupItem):
 
 @app.post("/get_group")
 def get_group(get_group: model.GetGroupItem):
+    print(get_group)
     group_list = list(db["group"].find({"member": {"$in": [get_group.user_id]}}))
     for group in group_list:
         group["_id"] = str(group["_id"])
