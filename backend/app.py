@@ -8,9 +8,13 @@ from typing import Optional
 import logging
 import os
 import sys
-from jwt import JWT
-from jwt.jwk import OctetJWK
-from jwt.exceptions import JWTDecodeError
+
+# from jwt import JWT
+# from jwt.jwk import OctetJWK
+# from jwt.exceptions import JWTDecodeError
+
+import jwt
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 import traceback
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -20,6 +24,7 @@ import hashlib
 import model
 from secrets import token_bytes
 from bson.objectid import ObjectId
+from urllib.parse import quote_plus
 
 # FastAPI configuration
 app = FastAPI()
@@ -50,15 +55,17 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-jwt_instance = JWT()
-jwk = OctetJWK(SECRET_KEY.encode("utf-8"))
+# jwt_instance = JWT()
+# jwk = OctetJWK(SECRET_KEY.encode("utf-8"))
 
 # 連接MongoDB
 if MONGO_HOST == "localhost":
     uri = f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 else:
-    uri = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{
-        MONGO_HOST}:{MONGO_PORT}/?authSource=admin"
+    # 對用戶名和密碼進行 URL 編碼
+    encoded_username = quote_plus(MONGO_USER)
+    encoded_password = quote_plus(MONGO_PASS)
+    uri = f"mongodb://{encoded_username}:{encoded_password}@{MONGO_HOST}:{MONGO_PORT}/?authSource=admin"
 logger.info("MongoDB connect uri: {}".format(uri))
 client = pymongo.MongoClient(uri)
 db = client["accounting"]
@@ -71,38 +78,36 @@ except Exception as e:
     logger.error("MongoDB connect failed")
     sys.exit(1)
 
+
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": int(expire.timestamp())})  # 使用整數時間戳
-    encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
+    to_encode.update({"exp": int(expire.timestamp())})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 def create_refresh_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(days=7)  # refresh token 通常有更長的有效期
     to_encode.update({"exp": int(expire.timestamp())})
-    encoded_jwt = jwt_instance.encode(to_encode, jwk, alg=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 def decode_access_token(token: str):
     try:
-        payload = jwt_instance.decode(token, jwk, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         print(f"成功解碼的載荷：{payload}")
         return payload
-    except JWTDecodeError as e:
+    except InvalidTokenError as e:
         print(f"JWT 解碼錯誤：{str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"無效的認證憑證：{str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except Exception as e:
-        print(f"未預期的錯誤：{str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"服務器錯誤：{str(e)}",
-        )
+
 
 @app.post("/register")
 def register(user: model.UserRegisterItem):
@@ -144,6 +149,7 @@ def register(user: model.UserRegisterItem):
     }
     user_result = db.users.insert_one(user)
     return {"success": True, "message": "注册成功"}
+
 
 @app.post("/login")
 def login(login_item: model.UserLoginItem):
@@ -197,6 +203,7 @@ def get_role_by_token(token: model.TokenModel):
         "user_data_session": user["user_data_session"],
     }
     return {"success": True, "message": "獲取角色成功", "user_data": return_data}
+
 
 @app.post("/add_spending")
 def add_spending(spending: model.SpendingItem):
